@@ -208,13 +208,13 @@
   .deadline-list li{border-bottom:1px solid var(--line);padding:0;}
   .deadline-list li:last-child{border-bottom:none;}
   .deadline-list li details{border:none;}
-  .deadline-list li summary{list-style:none;cursor:pointer;display:flex;flex-wrap:wrap;align-items:center;gap:2px 10px;padding:10px 0;font-size:14px;}
+  .deadline-list li summary{list-style:none;cursor:pointer;display:flex;flex-wrap:nowrap;align-items:center;gap:10px;padding:10px 0;font-size:14px;}
   .deadline-list li summary::-webkit-details-marker{display:none;}
   .deadline-list li summary time.kd-date{display:inline-flex;flex-direction:column;align-items:stretch;width:42px;flex:0 0 auto;border-radius:8px;overflow:hidden;border:1px solid var(--line);box-shadow:0 1px 2px rgba(22,40,61,.10);}
   .deadline-list li summary time.kd-date .kd-mon{display:block;background:var(--ink);color:#fff;font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;text-align:center;padding:3px 0;}
   .deadline-list li summary time.kd-date .kd-day{display:block;background:var(--card);color:var(--ink);font-size:19px;font-weight:800;text-align:center;line-height:1.25;padding:3px 0 4px;}
-  .deadline-list li summary .kd-label{font-weight:600;color:var(--ink);}
-  .deadline-list li summary::after{content:'▸';font-size:12px;color:var(--ink-soft);margin-left:auto;transition:transform .15s;}
+  .deadline-list li summary .kd-label{font-weight:600;color:var(--ink);flex:1 1 auto;min-width:0;}
+  .deadline-list li summary::after{content:'▸';font-size:12px;font-weight:700;color:#fff;background:var(--ink);width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;transition:transform .15s;}
   .deadline-list li details[open] summary::after{transform:rotate(90deg);}
   .deadline-list li .kd-body{padding:0 0 12px 2px;}
   .deadline-list li .kd-body {margin:0;}
