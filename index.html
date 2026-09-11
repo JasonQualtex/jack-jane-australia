@@ -203,14 +203,16 @@
   .check-acc summary::after{content:'▸';font-size:13px;color:var(--ink-soft);transition:transform .15s;flex:0 0 auto;}
   .check-acc[open] summary::after{transform:rotate(90deg);}
   .check-acc-title{flex:1;min-width:0;}
-  .check-acc-status{font-size:11.5px;font-weight:700;color:#6B4E1B;white-space:nowrap;padding:4px 10px;border-radius:20px;background:var(--gold-soft,#F1E7D2);flex:0 0 auto;}
-  .check-acc-status.all-done{color:#205735;background:#EAF5EE;}
+  .check-acc-status{font-size:11.5px;font-weight:700;color:#6B4E1B;white-space:nowrap;padding:4px 10px;border-radius:20px;background:linear-gradient(to right,#9FD9B4 var(--pct,0%),var(--gold-soft,#F1E7D2) var(--pct,0%));flex:0 0 auto;min-width:82px;text-align:center;transition:background .25s ease;}
+  .check-acc-status.all-done{color:#205735;}
   .deadline-list li{border-bottom:1px solid var(--line);padding:0;}
   .deadline-list li:last-child{border-bottom:none;}
   .deadline-list li details{border:none;}
-  .deadline-list li summary{list-style:none;cursor:pointer;display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 6px;padding:10px 0;font-size:14px;}
+  .deadline-list li summary{list-style:none;cursor:pointer;display:flex;flex-wrap:wrap;align-items:center;gap:2px 10px;padding:10px 0;font-size:14px;}
   .deadline-list li summary::-webkit-details-marker{display:none;}
-  .deadline-list li summary time{display:inline;font-weight:700;color:var(--ink);}
+  .deadline-list li summary time.kd-date{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;min-width:38px;padding:2px 0;}
+  .deadline-list li summary time.kd-date .kd-day{font-size:19px;font-weight:800;color:var(--ink);}
+  .deadline-list li summary time.kd-date .kd-mon{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);margin-top:1px;}
   .deadline-list li summary .kd-label{font-weight:600;color:var(--ink);}
   .deadline-list li summary::after{content:'▸';font-size:12px;color:var(--ink-soft);margin-left:auto;transition:transform .15s;}
   .deadline-list li details[open] summary::after{transform:rotate(90deg);}
@@ -967,12 +969,13 @@ DAYS.push({
     <div class="card">
       <h3>Key Dates &amp; Deadlines</h3>
       <ol class="deadline-list">
-<li><details><summary><time datetime="2026-09-18">18 Sep 2026</time><span class="kd-label"> – VTAC scholarship docs (Monash) — recommended</span></summary><div class="kd-body"><p>For Monash equity/scholarship applicants, submit evidence early to allow corrections. This is a recommended date, not the closing deadline; check eligibility for each scholarship. <a href="https://vtac.edu.au/dates.html" target="_blank" rel="noopener">Official dates ↗</a></p></div></details></li>
-<li><details><summary><time datetime="2026-09-28">28 Sep 2026</time><span class="kd-label"> – VTAC timely applications close (Monash)</span></summary><div class="kd-body"><p>Submit the course application and pay within the timely application period, by 5pm Melbourne time (AEST). <a href="https://vtac.edu.au/dates.html" target="_blank" rel="noopener">Official dates ↗</a></p></div></details></li>
-<li><details><summary><time datetime="2026-09-30">30 Sep 2026</time><span class="kd-label"> – UAC early-bird closes (Newcastle)</span></summary><div class="kd-body"><p>Apply and pay by 11.59pm Sydney time (AEST) to secure the lower processing charge. Preferences can be updated later. <a href="https://www.uac.edu.au/media-centre/news/year-12-application-dates" target="_blank" rel="noopener">Official dates ↗</a></p></div></details></li>
-<li><details><summary><time datetime="2026-09-30">30 Sep 2026</time><span class="kd-label"> – QTAC lower application fee ends (UQ)</span></summary><div class="kd-body"><p>Applying and paying by this date secures the lower QTAC application fee — <b>it is not UQ’s final application deadline.</b> NCEA applicants use the “all other applicants” fee category, not the Australian Year 12 category. <a href="https://www.qtac.edu.au/fees/" target="_blank" rel="noopener">Official dates ↗</a></p></div></details></li>
-<li><details><summary><time datetime="2026-09-30">30 Sep 2026</time><span class="kd-label"> – UoA accommodation first round closes</span></summary><div class="kd-body"><p>Complete the accommodation application for first-round consideration. <a href="https://www.auckland.ac.nz/en/on-campus/accommodation/how-to-apply/when-can-you-move-in.html" target="_blank" rel="noopener">Official dates ↗</a></p></div></details></li>
-<li><details><summary><time datetime="2026-12-31">31 Dec 2026</time><span class="kd-label"> – UQ guaranteed-accommodation target date</span></summary><div class="kd-body"><p>UQ’s published target date to apply for guaranteed on-campus accommodation for Semester 1, 2027 commencement (a Confirmation of Enrolment is required). Rooms may still be available after this date, but it is not guaranteed. <a href="https://my.uq.edu.au/information-and-services/student-support/accommodation/accommodation-overview/guaranteed-accommodation-commencing-uq-students" target="_blank" rel="noopener">Official dates ↗</a></p></div></details></li>
+<li><details><summary><time datetime="2026-09-18" class="kd-date"><span class="kd-day">18</span><span class="kd-mon">Sep</span></time><span class="kd-label"> – VTAC scholarship docs (Monash) — recommended</span></summary><div class="kd-body"><p>For Monash equity/scholarship applicants, submit evidence early to allow corrections. This is a recommended date, not the closing deadline; check eligibility for each scholarship. <a href="https://vtac.edu.au/dates.html" target="_blank" rel="noopener">Official dates ↗</a></p></div></details></li>
+<li><details><summary><time datetime="2026-09-25" class="kd-date"><span class="kd-day">25</span><span class="kd-mon">Sep</span></time><span class="kd-label"> – UC accommodation applications due</span></summary><div class="kd-body"><p>Submit the application and finalise hall preferences before changes close. <a href="https://www.canterbury.ac.nz/life/accommodation/halls-of-residence/about-uc-halls-of-residence/key-dates" target="_blank" rel="noopener">Official dates ↗</a></p></div></details></li>
+<li><details><summary><time datetime="2026-09-28" class="kd-date"><span class="kd-day">28</span><span class="kd-mon">Sep</span></time><span class="kd-label"> – VTAC timely applications close (Monash)</span></summary><div class="kd-body"><p>Submit the course application and pay within the timely application period, by 5pm Melbourne time (AEST). <a href="https://vtac.edu.au/dates.html" target="_blank" rel="noopener">Official dates ↗</a></p></div></details></li>
+<li><details><summary><time datetime="2026-09-30" class="kd-date"><span class="kd-day">30</span><span class="kd-mon">Sep</span></time><span class="kd-label"> – UAC early-bird closes (Newcastle)</span></summary><div class="kd-body"><p>Apply and pay by 11.59pm Sydney time (AEST) to secure the lower processing charge. Preferences can be updated later. <a href="https://www.uac.edu.au/media-centre/news/year-12-application-dates" target="_blank" rel="noopener">Official dates ↗</a></p></div></details></li>
+<li><details><summary><time datetime="2026-09-30" class="kd-date"><span class="kd-day">30</span><span class="kd-mon">Sep</span></time><span class="kd-label"> – QTAC lower application fee ends (UQ)</span></summary><div class="kd-body"><p>Applying and paying by this date secures the lower QTAC application fee — <b>it is not UQ’s final application deadline.</b> NCEA applicants use the “all other applicants” fee category, not the Australian Year 12 category. <a href="https://www.qtac.edu.au/fees/" target="_blank" rel="noopener">Official dates ↗</a></p></div></details></li>
+<li><details><summary><time datetime="2026-09-30" class="kd-date"><span class="kd-day">30</span><span class="kd-mon">Sep</span></time><span class="kd-label"> – UoA accommodation first round closes</span></summary><div class="kd-body"><p>Complete the accommodation application for first-round consideration. <a href="https://www.auckland.ac.nz/en/on-campus/accommodation/how-to-apply/when-can-you-move-in.html" target="_blank" rel="noopener">Official dates ↗</a></p></div></details></li>
+<li><details><summary><time datetime="2026-12-31" class="kd-date"><span class="kd-day">31</span><span class="kd-mon">Dec</span></time><span class="kd-label"> – UQ guaranteed-accommodation target date</span></summary><div class="kd-body"><p>UQ’s published target date to apply for guaranteed on-campus accommodation for Semester 1, 2027 commencement (a Confirmation of Enrolment is required). Rooms may still be available after this date, but it is not guaranteed. <a href="https://my.uq.edu.au/information-and-services/student-support/accommodation/accommodation-overview/guaranteed-accommodation-commencing-uq-students" target="_blank" rel="noopener">Official dates ↗</a></p></div></details></li>
 </ol>
     </div>`
 });
@@ -1020,8 +1023,10 @@ function initChecklist(){
     const total = items.length;
     const badge = root.querySelector(':scope > summary .check-acc-status');
     if(!badge) return;
-    badge.textContent = (total>0 && done === total) ? '✓ All done' : `${done}/${total} done`;
-    badge.classList.toggle('all-done', total>0 && done === total);
+    const allDone = total>0 && done === total;
+    badge.textContent = allDone ? '✓ All done' : `${done}/${total} done`;
+    badge.classList.toggle('all-done', allDone);
+    badge.style.setProperty('--pct', (total>0 ? Math.round(done/total*100) : 0) + '%');
   }
   function show(row, box){
     row.classList.toggle('is-done', box.checked);
