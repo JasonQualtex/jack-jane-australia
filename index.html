@@ -180,6 +180,23 @@
   footer.jump button{appearance:none; border:none; background:var(--ink); color:#fff; font-family:var(--sans);
     font-weight:600; font-size:13.5px; padding:9px 16px; border-radius:20px;}
   footer.jump span{font-size:12px; color:var(--ink-soft);}
+
+  /* Checklist: same cards and palette, with generous touch targets. */
+  .check-item{border:1px solid var(--line);border-radius:10px;padding:12px;margin-top:10px;min-width:0;transition:background .15s;}
+  .check-item.is-done{background:#EAF5EE;border-color:#76A98A;}
+  .check-label{display:flex;align-items:center;gap:10px;min-height:44px;cursor:pointer;font-size:14px;line-height:1.45;}
+  .check-label input{width:24px;height:24px;flex:0 0 24px;accent-color:#24633D;cursor:pointer;}
+  .check-title{flex:1;min-width:0;overflow-wrap:anywhere;}
+  .check-state{display:block;font-size:12px;font-weight:700;color:var(--ink-soft);margin-top:3px;}
+  .is-done .check-state{color:#205735;}
+  .check-notes-label{display:block;font-size:12px;color:var(--ink-soft);margin:8px 0 5px;}
+  .check-item textarea{display:block;width:100%;max-width:100%;min-height:72px;resize:vertical;border:1px solid #AAB7C4;border-radius:6px;padding:10px;background:#fff;color:var(--ink);font:16px/1.45 var(--sans);}
+  .check-item input:focus-visible,.check-item textarea:focus-visible{outline:3px solid var(--gold);outline-offset:3px;}
+  .check-help{font-size:13px;line-height:1.55;color:var(--ink-soft);}
+  .deadline-list{padding-left:22px;margin:12px 0;}
+  .deadline-list li{padding:10px 0;line-height:1.55;border-bottom:1px solid var(--line);font-size:14px;}
+  .deadline-list time{display:block;font-weight:700;color:var(--ink);}
+  #checklist .card p{line-height:1.55;}
 </style>
 </head>
 <body>
@@ -241,6 +258,27 @@ const PALETTE = {
 };
 
 /* ---------- day data ---------- */
+
+const CHECKLIST_TASKS = [
+  ['accommodation-application', 'Accommodation application submitted'],
+  ['course-application', 'Course application submitted'],
+  ['scholarships', 'Scholarship options considered'],
+  ['campus-visit', 'Campus visit'],
+  ['accommodation-visit', 'Accommodation visit']
+];
+function checklistItem(id, title){
+  return `<div class="check-item" data-check-id="${id}">
+    <label class="check-label" for="check-${id}"><input id="check-${id}" type="checkbox"><span class="check-title">${title}<span class="check-state">To do</span></span></label>
+    <label class="check-notes-label" for="notes-${id}">Notes — ${title}</label>
+    <textarea id="notes-${id}" rows="2" placeholder="e.g. Jack applied 8 Sep"></textarea>
+  </div>`;
+}
+function universityChecklist(id, title, help=''){
+  return `<div class="card"><h3>${title}</h3>${help ? `<p class="check-help">${help}</p>` : ''}
+    ${id==='uq' ? checklistItem('uq-provider-contact','Accommodation providers contacted regarding inspections/tours (Target: before 25 Sep)') : ''}
+    ${CHECKLIST_TASKS.map(([key,label])=>checklistItem(id+'-'+key,label)).join('')}</div>`;
+}
+
 const DAYS = [
 {
   id:"sat19", weekday:"SAT 19 SEP", title:"Auckland → Melbourne", tab:"plane", sky:"melbourne", icon:"plane", pal:"melbourne", photo:"jetstar_left",
@@ -691,7 +729,7 @@ const DAYS = [
   `
 },
 {
-  id:"fri25", weekday:"FRI 25 SEP", title:"University of Queensland — St Lucia", tab:"cap", sky:"campus", icon:"cap", pal:"brisbane", photo:"uq",
+  id:"fri25", weekday:"FRI 25 SEP", title:"University of Queensland (UQ) – St Lucia Campus", tab:"cap", sky:"campus", icon:"cap", pal:"brisbane", photo:"uq",
   html: `
     <div class="card">
       <h3>Hotel → UQ St Lucia</h3>
@@ -702,48 +740,30 @@ const DAYS = [
       </ul>
     </div>
     <div class="card">
-      <h3>Visit — self-guided</h3>
-      <div class="flag">UQ confirmed they don't offer personalised or single-person tours, and no group tour lines up with 25 Sep. This is a self-guided walk-around — no arranged Engineering meeting.</div>
-      <ul class="plain">
-        <li>Self-guided walk using the UQ Maps app</li>
-        <li>Engineering facilities (publicly accessible areas)</li>
-        <li>Student accommodation (contact provider directly to arrange a look)</li>
-        <li>Hockey turf on campus</li>
+      <h3>Visit Status</h3>
+      <div class="flag">UQ has confirmed that individual engineering meetings and personalised campus tours are not available during Jack's visit.</div>
+      <p>Instead, UQ recommends exploring the campus independently using their digital visitor resources, including virtual tours and the UQ Maps app.</p>
+      <h3>Visit Objectives</h3>
+      <ul class="bulleted">
+        <li>Explore the engineering precinct</li>
+        <li>Inspect student facilities and study spaces</li>
+        <li>Assess the overall campus environment</li>
+        <li>Review accommodation options and surrounding amenities</li>
+        <li>Compare the St Lucia campus experience with other universities under consideration</li>
       </ul>
-      <div style="margin-top:10px;">
-        <a class="btn btn-block" href="https://maps.uq.edu.au/st-lucia" target="_blank">${iconSvg('compass',13)} UQ Maps — St Lucia ↗</a>
-        <a class="btn btn-block" href="https://maps.apple.com/?q=University+of+Queensland+St+Lucia+Campus" target="_blank">Map pin ↗</a>
-        <a class="btn btn-block" href="https://study.uq.edu.au/events/explore-uq-campus-tours" target="_blank">Explore UQ tour dates ↗</a>
-        <a class="btn btn-block" href="https://my.uq.edu.au/student-support/accommodation" target="_blank">On-campus accommodation providers ↗</a>
-        <a class="btn btn-block" href="https://study.uq.edu.au/study-options/programs/bachelor-engineering-honours-2455/aerospace-engineering-aeroec2455" target="_blank">Aerospace Engineering (major) ↗</a>
-        <a class="btn btn-block" href="https://study.uq.edu.au/study-options/programs/bachelor-engineering-honours-2455/mechatronic-engineering-mectre2455" target="_blank">Mechatronic Engineering (major) ↗</a>
-      </div>
     </div>
     <div class="card">
-      <h3>Correspondence</h3>
-      <details class="conf">
-        <summary>${iconSvg('compass',13)} Case: 02994805</summary>
-        <div class="conf-body">
-          <div class="msg">
-            <span class="who">Jason</span><span class="when">2 Sep</span>
-            <p>Asked to arrange a visit for 25 Sep, particularly the Engineering facilities, and to meet someone from the Faculty about Mechatronics, Robotics and Aerospace pathways.</p>
-          </div>
-          <div class="msg">
-            <span class="who">UQ</span><span class="when">3 Sep</span>
-            <p>No scheduled campus tour on 25 September. Suggested: self-guided walk via the UQ Maps app, pre-recorded virtual tours (incl. labs not normally open to the public), or contacting an on-campus accommodation provider directly.</p>
-          </div>
-          <div class="msg">
-            <span class="who">Jason</span><span class="when">8 Sep</span>
-            <p>Asked again specifically for help arranging the Engineering component — a brief conversation about Mechatronics/Robotics/Aerospace pathways — noting Jane and Jack are happy to explore the rest of campus independently.</p>
-          </div>
-          <div class="msg">
-            <span class="who">UQ</span><span class="when">9 Sep</span>
-            <p>Confirmed they don't offer personalised or single-person tours, and pointed back to the self-guided/virtual options above. No Engineering meeting arranged.</p>
-          </div>
-          <a class="btn btn-block" href="https://study.uq.edu.au/university-life/campus-tours/virtual-tours" target="_blank" style="margin-top:8px;">${iconSvg('compass',13)} Virtual tours ↗</a>
-          <div class="open-item">Open: no Engineering-specific contact arranged — worth deciding whether to try the on-campus Engineering building directly on the day, or let it go.</div>
-        </div>
-      </details>
+      <h3>UQ Resources</h3>
+      <a class="btn btn-block" href="https://study.uq.edu.au/university-life/campus-tours/virtual-tours" target="_blank" rel="noopener">Campus &amp; Virtual Tours ↗</a>
+      <a class="btn btn-block" href="https://my.uq.edu.au/mobile-apps" target="_blank" rel="noopener">UQ Maps App ↗</a>
+      <a class="btn btn-block" href="https://study.uq.edu.au/study-options/programs/bachelor-engineering-honours-2455" target="_blank" rel="noopener">Bachelor of Engineering (Honours) ↗</a>
+      <a class="btn btn-block" href="https://study.uq.edu.au/contact" target="_blank" rel="noopener">Future Students Contact Centre ↗</a>
+    </div>
+    <div class="card">
+      <h3>Accommodation</h3>
+      <p>UQ advised that accommodation providers may offer inspections or tours of their facilities, however these are arranged directly with the provider and are not coordinated through UQ Future Students.</p>
+      <p>If accommodation remains under consideration after the campus visit, contact accommodation providers directly regarding tours, inspections, availability and application requirements.</p>
+      <a class="btn btn-block" href="https://my.uq.edu.au/student-support/accommodation" target="_blank" rel="noopener">Accommodation providers ↗</a>
     </div>
     <div class="card">
       <h3>Return</h3>
@@ -895,6 +915,52 @@ const DAYS = [
 }
 ];
 
+
+DAYS.push({
+  id:"checklist", weekday:"CHECKLIST", title:"Checklist", tab:"check", sky:"campus", icon:"check", pal:"ref",
+  html: `
+    <div class="card">
+      <h3>Application Systems</h3>
+      <p class="check-help">Tick each task when done and add a note below it. Nothing is marked done automatically. Saved on this browser/device only; Jack’s and Jane’s devices do not sync. The checklist works offline while this page remains loaded; external links need internet.</p>
+      <p id="checklist-save-status" class="check-help" role="status" aria-live="polite">Changes save automatically on this device.</p>
+      ${checklistItem('nzqa-permission','NZQA privacy permission completed (Required for Australian admissions processing)')}
+      ${checklistItem('vtac-account','VTAC account created (Required for Monash)')}
+      ${checklistItem('uac-account','UAC account created (Required for Newcastle)')}
+      ${checklistItem('qtac-account','QTAC account created (Required for UQ)')}
+    </div>
+    ${universityChecklist('uc','University of Canterbury (UC)')}
+    ${universityChecklist('uoa','University of Auckland (UoA)')}
+    ${universityChecklist('monash','Monash University','Accommodation is already open (since 1 Sep 2026, 9am AEST). Applications are assessed by submission date and time, so apply now if considering a room. <a href="https://www.monash.edu/accommodation/on-campus-accommodation/apply/application-process-key-dates" target="_blank" rel="noopener">Monash accommodation ↗</a>')}
+    ${universityChecklist('newcastle','University of Newcastle')}
+    ${universityChecklist('uq','University of Queensland (UQ)')}
+    <div class="card">
+      <h3>Accommodation Reference</h3>
+      ${checklistItem('ccrf-school-reference','School accommodation reference (CCRF) submitted — UC due 15 Sep')}
+      <p class="check-help">Ask school to complete the reference and confirm the relevant halls are selected. UC requires this before its accommodation application due date. <a href="https://www.canterbury.ac.nz/life/accommodation/halls-of-residence/about-uc-halls-of-residence/key-dates" target="_blank" rel="noopener">UC reference dates ↗</a></p>
+    </div>
+    <div class="card">
+      <h3>Key Dates &amp; Deadlines</h3>
+      <p class="check-help">Early actions for 2027 entry · 11 Sep–11 Nov 2026 · researched 11 Sep 2026. Times are local to the named Australian city; NZ deadlines use New Zealand time.</p>
+      <ol class="deadline-list"><li><time datetime="2026-09-15">15 Sep 2026</time><b>UC accommodation reference due.</b> Arrange the Common Confidential Reference Form (CCRF) with school and confirm it has been submitted. <a href="https://www.canterbury.ac.nz/life/accommodation/halls-of-residence/about-uc-halls-of-residence/key-dates" target="_blank" rel="noopener">Official dates ↗</a></li>
+<li><time datetime="2026-09-18">18 Sep 2026</time><b>VTAC scholarship supporting documents — recommended submission date.</b> For Monash equity/scholarship applicants, submit evidence early to allow corrections. This is a recommended date, not the closing deadline; check eligibility for each scholarship. <a href="https://vtac.edu.au/dates.html" target="_blank" rel="noopener">Official dates ↗</a></li>
+<li><time datetime="2026-09-23">23 Sep 2026 · 10am Newcastle (AEST)</time><b>Newcastle accommodation applications open for new applicants.</b> Apply promptly for the best chance of your preferred residence. Opening date, not a closing deadline; the NSW-only Early Entry Program priority scheme does not apply to Jack. <a href="https://www.newcastle.edu.au/campus-life/accommodation/on-campus-accommodation/how-to-apply" target="_blank" rel="noopener">Official dates ↗</a></li>
+<li><time datetime="2026-09-25">25 Sep 2026</time><b>UC accommodation applications due.</b> Submit the application and finalise hall preferences before changes close. <a href="https://www.canterbury.ac.nz/life/accommodation/halls-of-residence/about-uc-halls-of-residence/key-dates" target="_blank" rel="noopener">Official dates ↗</a></li>
+<li><time datetime="2026-09-28">28 Sep 2026 · 5pm Melbourne (AEST)</time><b>VTAC timely applications close — Monash.</b> Submit the course application and pay within the timely application period. <a href="https://vtac.edu.au/dates.html" target="_blank" rel="noopener">Official dates ↗</a></li>
+<li><time datetime="2026-09-30">30 Sep 2026 · 11.59pm Sydney (AEST)</time><b>UAC early-bird applications close — Newcastle.</b> Apply and pay by this date to secure the lower processing charge. Preferences can be updated later. <a href="https://www.uac.edu.au/media-centre/news/year-12-application-dates" target="_blank" rel="noopener">Official dates ↗</a></li>
+<li><time datetime="2026-09-30">30 Sep 2026</time><b>QTAC lower-fee application period ends — UQ.</b> Submit and pay before the October fee increase. NCEA applicants use the “all other applicants” fee category, not the Australian Year 12 category. <a href="https://www.qtac.edu.au/fees/" target="_blank" rel="noopener">Official dates ↗</a></li>
+<li><time datetime="2026-09-30">30 Sep 2026</time><b>UoA accommodation first-round application deadline.</b> Complete the accommodation application for first-round consideration. <a href="https://www.auckland.ac.nz/en/on-campus/accommodation/how-to-apply/when-can-you-move-in.html" target="_blank" rel="noopener">Official dates ↗</a></li>
+<li><time datetime="2026-10-09">9 Oct 2026 · 5pm Melbourne (AEDT)</time><b>VTAC equity schemes and scholarship applications close — Monash.</b> Submit the application and all required evidence for eligible scholarships. Individual Monash awards may have different criteria or automatic consideration. <a href="https://vtac.edu.au/dates.html" target="_blank" rel="noopener">Official dates ↗</a></li></ol>
+      <details class="conf">
+        <summary>Other requested deadlines — what is published?</summary>
+        <div class="conf-body">
+          <p><b>Course applications:</b> No September–early November preferred domestic engineering application date was found for UC or UoA. Auckland lists 8 December 2026 for Engineering (Honours), outside this two-month list. UC’s published domestic closing date is also outside this window. Apply early while completing the checklists. <a href="https://www.canterbury.ac.nz/study/study-support-info/dates-and-timetables/enrolment-dates" target="_blank" rel="noopener">UC applications ↗</a> · <a href="https://www.auckland.ac.nz/en/study/applications-and-admissions/how-to-apply/undergraduate-application-closing-dates.html" target="_blank" rel="noopener">UoA applications ↗</a></p>
+          <p><b>Accommodation:</b> Monash prioritises submission time and publishes an opening date rather than a fixed application closing date. Newcastle likewise recommends applying promptly from its new-applicant opening date. UQ applications go directly to individual providers; no common September–early November closing date was verified. Check each shortlisted provider’s priority rules now. <a href="https://www.monash.edu/accommodation/on-campus-accommodation/apply/application-process-key-dates" target="_blank" rel="noopener">Monash accommodation ↗</a> · <a href="https://www.newcastle.edu.au/campus-life/accommodation/on-campus-accommodation/how-to-apply" target="_blank" rel="noopener">Newcastle accommodation ↗</a> · <a href="https://my.uq.edu.au/information-and-services/student-support/accommodation/accommodation-overview/guaranteed-accommodation-commencing-uq-students" target="_blank" rel="noopener">UQ providers ↗</a></p>
+          <p><b>Scholarships:</b> UC’s main incoming first-year scholarship round and Auckland’s main school-leaver round have already closed in August; they are not upcoming deadlines. Check individual awards for eligibility and separate rounds. Monash’s relevant VTAC dates appear above. No applicable Newcastle 2027 commencing-undergraduate scholarship deadline in this two-month window was verified; its directory has award-specific dates, not one university-wide deadline. <a href="https://www.canterbury.ac.nz/study/getting-started/scholarships/incoming-first-year-scholarships/general-scholarships/" target="_blank" rel="noopener">UC scholarships ↗</a> · <a href="https://www.auckland.ac.nz/assets/study/scholarships-and-funding/types-of-scholarships/undergraduate-scholarships/entry-level-and-first-year-scholarships/scholarship-and-awards-guidebook-2027.pdf" target="_blank" rel="noopener">UoA scholarships ↗</a> · <a href="https://www.newcastle.edu.au/scholarships" target="_blank" rel="noopener">Newcastle scholarships ↗</a></p>
+        </div>
+      </details>
+    </div>`
+});
+
 const tabsEl = document.getElementById('tabs');
 const mainEl = document.getElementById('main');
 let current = 0;
@@ -925,13 +991,60 @@ DAYS.forEach((d,i)=>{
   mainEl.appendChild(sec);
 });
 
+
+// One stable key per task keeps notes and completion independent of page order.
+function initChecklist(){
+  const prefix = 'jack-jane-australia:checklist:v1:';
+  const status = document.getElementById('checklist-save-status');
+  const rows = new Map();
+  function show(row, box){
+    row.classList.toggle('is-done', box.checked);
+    row.querySelector('.check-state').textContent = box.checked ? '✓ Done' : 'To do';
+  }
+  function restore(row, raw){
+    const box = row.querySelector('input');
+    const notes = row.querySelector('textarea');
+    try {
+      const saved = JSON.parse(raw || 'null');
+      box.checked = saved?.done === true;
+      notes.value = typeof saved?.notes === 'string' ? saved.notes : '';
+    } catch(e) { box.checked = false; notes.value = ''; }
+    show(row, box);
+  }
+  document.querySelectorAll('#checklist .check-item').forEach(row=>{
+    const key = prefix + row.dataset.checkId;
+    const box = row.querySelector('input');
+    const notes = row.querySelector('textarea');
+    rows.set(key, row);
+    try { restore(row, localStorage.getItem(key)); }
+    catch(e) { status.textContent = 'Device storage is unavailable. Changes work here but will not survive closing or reloading this page.'; }
+    const save = ()=>{
+      show(row, box);
+      try {
+        localStorage.setItem(key, JSON.stringify({done:box.checked, notes:notes.value}));
+        status.textContent = 'Saved on this device. Other devices do not sync.';
+      } catch(e) {
+        status.textContent = 'Could not save on this device. Keep this page open and copy any important notes before closing.';
+      }
+    };
+    box.addEventListener('change', save);
+    notes.addEventListener('input', save);
+  });
+  window.addEventListener('storage', event=>{
+    if(event.key === null) rows.forEach(row=>restore(row, null));
+    else if(rows.has(event.key)) restore(rows.get(event.key), event.newValue);
+  });
+}
+initChecklist();
+
 function goTo(i){
   current = Math.max(0, Math.min(DAYS.length-1, i));
   document.querySelectorAll('nav.tabs button').forEach((b,idx)=>b.classList.toggle('active', idx===current));
   document.querySelectorAll('section.day').forEach((s,idx)=>s.classList.toggle('active', idx===current));
-  document.getElementById('pageLabel').textContent = `Day ${current+1} of ${DAYS.length}`;
+  document.getElementById('pageLabel').textContent = `Page ${current+1} of ${DAYS.length}`;
   document.getElementById('prevBtn').style.visibility = current===0 ? 'hidden':'visible';
-  document.getElementById('nextBtn').textContent = current===DAYS.length-1 ? 'Reference' : 'Next';
+  document.getElementById('nextBtn').textContent = DAYS[current+1]?.id==='checklist' ? 'Checklist' : 'Next';
+  document.getElementById('nextBtn').style.visibility = current===DAYS.length-1 ? 'hidden' : 'visible';
   const activeTab = tabsEl.children[current];
   if(activeTab && activeTab.scrollIntoView){ try{ activeTab.scrollIntoView({inline:'center', block:'nearest', behavior:'smooth'}); }catch(e){} }
   window.scrollTo(0,0);
