@@ -205,6 +205,8 @@
   .check-acc-title{flex:1;min-width:0;}
   .check-acc-status{font-size:11.5px;font-weight:700;color:#6B4E1B;white-space:nowrap;padding:4px 10px;border-radius:20px;background:linear-gradient(to right,#9FD9B4 var(--pct,0%),var(--gold-soft,#F1E7D2) var(--pct,0%));flex:0 0 auto;min-width:82px;text-align:center;transition:background .25s ease;}
   .check-acc-status.all-done{color:#205735;}
+  .who-picker{display:flex; gap:8px; flex-wrap:wrap; margin-top:4px;}
+  .who-btn.active{background:var(--ink); color:#fff; border-color:var(--ink);}
   .deadline-list li{border-bottom:1px solid var(--line);padding:0;}
   .deadline-list li:last-child{border-bottom:none;}
   .deadline-list li details{border:none;}
@@ -273,6 +275,11 @@ const PHOTO = {
 
 
 /* ---------- per-section colour palette ---------- */
+// Shared checklist sync — set to a Firebase Realtime Database URL (e.g. "https://YOUR-PROJECT-default-rtdb.firebaseio.com/")
+// to make checklist ticks/notes sync across Jason, Jack and Jane's devices. Leave blank to keep the old
+// device-only behaviour.
+const SYNC_URL = "https://jackchecklist-6c8ba-default-rtdb.firebaseio.com/";
+
 const PALETTE = {
   melbourne: {accent:"#2D6A8F", accentSoft:"#DCEAF2", tab:"#7FB8DA"},
   newcastle: {accent:"#9C5A2E", accentSoft:"#F1E1D2", tab:"#D9A272"},
@@ -962,10 +969,19 @@ DAYS.push({
   id:"checklist", weekday:"CHECKLIST", title:"Checklist", tab:"check", sky:"campus", icon:"check", pal:"ref", photo:"dog_checklist",
   html: `
     <div class="card">
+      <h3>Who's ticking?</h3>
+      <p class="check-help">Pick your name once on this device so ticks and notes show who did them.</p>
+      <div class="who-picker">
+        <button type="button" class="btn who-btn" data-who="Jason">Jason</button>
+        <button type="button" class="btn who-btn" data-who="Jack">Jack</button>
+        <button type="button" class="btn who-btn" data-who="Jane">Jane</button>
+      </div>
+    </div>
+    <div class="card">
       <details class="check-acc" data-check-group="appsys">
         <summary><span class="check-acc-title">Application Systems</span><span class="check-acc-status">To do</span></summary>
         <div class="check-acc-body">
-          <p class="check-help">Tick each task and add a note. Saved on this device only — Jack's and Jane's devices don't sync.</p>
+          <p class="check-help">Tick each task and add a note.</p>
           <p id="checklist-save-status" class="check-help" role="status" aria-live="polite">Changes save automatically on this device.</p>
           ${checklistItem('nzqa-permission','NZQA privacy permission')}
           ${checklistItem('vtac-account','VTAC account (Monash)')}
@@ -1028,8 +1044,31 @@ DAYS.forEach((d,i)=>{
 // One stable key per task keeps notes and completion independent of page order.
 function initChecklist(){
   const prefix = 'jack-jane-australia:checklist:v1:';
+  const whoKey = 'jack-jane-australia:whoami';
   const status = document.getElementById('checklist-save-status');
-  const rows = new Map();
+  const rows = new Map(); // taskId -> row element
+  const syncEnabled = !!SYNC_URL;
+  let whoami = null;
+  try { whoami = localStorage.getItem(whoKey) || null; } catch(e){}
+
+  function setStatus(text){ if(status) status.textContent = text; }
+
+  function readLocal(id){
+    try {
+      const saved = JSON.parse(localStorage.getItem(prefix+id) || 'null');
+      if(!saved) return null;
+      return {
+        done: saved.done === true,
+        notes: typeof saved.notes === 'string' ? saved.notes : '',
+        by: typeof saved.by === 'string' ? saved.by : null,
+        updatedAt: typeof saved.updatedAt === 'number' ? saved.updatedAt : 0
+      };
+    } catch(e) { return null; }
+  }
+  function writeLocal(id, data){
+    try { localStorage.setItem(prefix+id, JSON.stringify(data)); return true; }
+    catch(e) { return false; }
+  }
   function updateGroup(root){
     if(!root) return;
     const items = root.querySelectorAll('.check-item');
@@ -1042,44 +1081,109 @@ function initChecklist(){
     badge.classList.toggle('all-done', allDone);
     badge.style.setProperty('--pct', (total>0 ? Math.round(done/total*100) : 0) + '%');
   }
-  function show(row, box){
+  function applyToRow(row, data){
+    const box = row.querySelector('input');
+    const notes = row.querySelector('textarea');
+    box.checked = !!data?.done;
+    if(document.activeElement !== notes) notes.value = data?.notes || ''; // don't clobber active typing
     row.classList.toggle('is-done', box.checked);
-    row.querySelector('.check-state').textContent = box.checked ? '✓ Done' : 'To do';
+    row.querySelector('.check-state').textContent = box.checked ? (data?.by ? `✓ ${data.by}` : '✓ Done') : 'To do';
     updateGroup(row.closest('details.check-acc'));
   }
-  function restore(row, raw){
-    const box = row.querySelector('input');
-    const notes = row.querySelector('textarea');
-    try {
-      const saved = JSON.parse(raw || 'null');
-      box.checked = saved?.done === true;
-      notes.value = typeof saved?.notes === 'string' ? saved.notes : '';
-    } catch(e) { box.checked = false; notes.value = ''; }
-    show(row, box);
+
+  // Who's ticking? — per-device name picker, tags checked items so everyone can see who did what.
+  const whoBtns = document.querySelectorAll('.who-btn');
+  function renderWho(){ whoBtns.forEach(b=>b.classList.toggle('active', b.dataset.who === whoami)); }
+  whoBtns.forEach(b=>{
+    b.addEventListener('click', ()=>{
+      whoami = b.dataset.who;
+      try { localStorage.setItem(whoKey, whoami); } catch(e){}
+      renderWho();
+    });
+  });
+  renderWho();
+
+  function remoteBase(){ return SYNC_URL.replace(/\/*$/, '/'); }
+  function pushRemote(id, data){
+    if(!syncEnabled) return;
+    fetch(remoteBase()+'checklist/'+encodeURIComponent(id)+'.json', {
+      method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data)
+    }).then(r=>{
+      if(!r.ok) setStatus("Couldn't reach the shared checklist — saved on this device, will retry syncing.");
+    }).catch(()=> setStatus("Couldn't reach the shared checklist — saved on this device, will retry syncing."));
   }
+  function pullRemote(){
+    if(!syncEnabled) return Promise.resolve({ok:false, tree:null});
+    return fetch(remoteBase()+'checklist.json')
+      .then(r=> r.ok ? r.json().then(tree=>({ok:true, tree})) : {ok:false, tree:null})
+      .catch(()=>({ok:false, tree:null}));
+  }
+  function mergeRemote(tree){
+    if(!tree) return;
+    rows.forEach((row, id)=>{
+      const remote = tree[id];
+      if(!remote) return;
+      const local = readLocal(id) || {done:false, notes:'', by:null, updatedAt:0};
+      if((remote.updatedAt||0) > local.updatedAt){
+        const merged = {
+          done: !!remote.done,
+          notes: typeof remote.notes === 'string' ? remote.notes : '',
+          by: typeof remote.by === 'string' ? remote.by : null,
+          updatedAt: remote.updatedAt || Date.now()
+        };
+        writeLocal(id, merged);
+        applyToRow(row, merged);
+      }
+    });
+  }
+
   document.querySelectorAll('#checklist .check-item').forEach(row=>{
-    const key = prefix + row.dataset.checkId;
+    const id = row.dataset.checkId;
     const box = row.querySelector('input');
     const notes = row.querySelector('textarea');
-    rows.set(key, row);
-    try { restore(row, localStorage.getItem(key)); }
-    catch(e) { status.textContent = 'Device storage is unavailable. Changes work here but will not survive closing or reloading this page.'; }
-    const save = ()=>{
-      show(row, box);
-      try {
-        localStorage.setItem(key, JSON.stringify({done:box.checked, notes:notes.value}));
-        status.textContent = 'Saved on this device. Other devices do not sync.';
-      } catch(e) {
-        status.textContent = 'Could not save on this device. Keep this page open and copy any important notes before closing.';
+    rows.set(id, row);
+    applyToRow(row, readLocal(id));
+
+    let notesTimer = null;
+    const commit = ()=>{
+      const prior = readLocal(id) || {by:null};
+      const data = { done: box.checked, notes: notes.value, by: box.checked ? (whoami || prior.by) : null, updatedAt: Date.now() };
+      const ok = writeLocal(id, data);
+      applyToRow(row, data);
+      if(syncEnabled){
+        pushRemote(id, data);
+        setStatus('Synced — Jason, Jack and Jane all see these ticks and notes.');
+      } else {
+        setStatus(ok ? "Saved on this device only — Jack's and Jane's devices don't sync." : 'Could not save on this device. Keep this page open and copy any important notes before closing.');
       }
     };
-    box.addEventListener('change', save);
-    notes.addEventListener('input', save);
+    box.addEventListener('change', commit);
+    notes.addEventListener('input', ()=>{ clearTimeout(notesTimer); notesTimer = setTimeout(commit, 600); });
   });
+
+  setStatus(syncEnabled ? 'Loading shared checklist…' : "Saved on this device only — Jack's and Jane's devices don't sync.");
+
   window.addEventListener('storage', event=>{
-    if(event.key === null) rows.forEach(row=>restore(row, null));
-    else if(rows.has(event.key)) restore(rows.get(event.key), event.newValue);
+    if(!event.key || !event.key.startsWith(prefix)) return;
+    const id = event.key.slice(prefix.length);
+    const row = rows.get(id);
+    if(row) applyToRow(row, readLocal(id));
   });
+
+  if(syncEnabled){
+    pullRemote().then(({ok, tree})=>{
+      mergeRemote(tree);
+      setStatus(ok ? 'Synced — Jason, Jack and Jane all see these ticks and notes.' : "Couldn't reach the shared checklist — showing what's saved on this device.");
+    });
+    setInterval(()=>{
+      if(document.hidden) return;
+      if(!document.getElementById('checklist')?.classList.contains('active')) return;
+      pullRemote().then(({ok, tree})=>{
+        mergeRemote(tree);
+        if(ok) setStatus('Synced — Jason, Jack and Jane all see these ticks and notes.');
+      });
+    }, 20000);
+  }
 }
 initChecklist();
 
